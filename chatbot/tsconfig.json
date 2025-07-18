@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Modern JavaScript features for compatibility
+    "module": "ESNext", // Ensures ESNext modules are used
+    "moduleResolution": "node", // Resolves modules like Node.js
+    "jsx": "preserve", // Necessary for React 17 and later
+    "baseUrl": ".", // The base directory for module resolution
+    "paths": {
+      "@components/*": ["src/components/*"], // Resolves @components to src/components
+      "@pages/*": ["src/pages/*"], // Resolves @pages to src/pages
+      "@styles/*": ["src/styles/*"], // Resolves @styles to src/styles
+      "@/*": ["src/*"] // Resolves @ to src (for other folders in src)
+    },
+    "strict": true, // Enables strict type-checking options
+    "esModuleInterop": true, // Ensures compatibility with non-ESM modules
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext" // Includes the latest JavaScript features
+    ],
+    "allowJs": true, // Allows JavaScript files to be compiled
+    "skipLibCheck": true, // Skips type checking of declaration files (improves build time)
+    "noEmit": true, // Doesn't emit output files, useful for TypeScript type-checking
+    "incremental": true, // Enables incremental compilation for faster builds
+    "resolveJsonModule": true, // Allows importing JSON files
+    "isolatedModules": true, // Ensures that each file can be safely transpiled independently
+    "plugins": [
+      {
+        "name": "next" // Uses the Next.js plugin to optimize Next.js projects
+      }
+    ]
+  },
+  "include": [
+    "**/*.ts", // Includes all TypeScript files
+    "**/*.tsx", // Includes all TypeScript JSX files
+    "next-env.d.ts", // Includes the Next.js type declarations
+    "src/**/*", // Includes all files in the src folder
+    ".next/types/**/*.ts" // Includes Next.js types (needed by Next.js)
+  ],
+  "exclude": [
+    "node_modules", // Excludes the node_modules directory
+    ".next" // Excludes the Next.js build output directory
+  ]
+}
