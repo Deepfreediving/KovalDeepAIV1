@@ -1,5 +1,5 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable React Strict Mode for better debugging
   reactStrictMode: true,
 
   // Rewrites configuration (if you need to rewrite URLs)
@@ -38,4 +38,4 @@ const nextConfig = {
   // You can configure more Next.js settings here if necessary
 };
 
-module.exports = nextConfig;
+module.exports = nextConfig;  // Use module.exports for CommonJS

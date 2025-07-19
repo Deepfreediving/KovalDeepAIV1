@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from "react";
-import Chat from "@/components/chat";
+import Chat from "@/components/chat"; // Your custom Chat component
 import { useChat } from "ai/react";  // Hook for handling chat logic
 
 const Home: React.FC = () => {
   const [context, setContext] = useState<string[] | null>(null);
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  const { messages, input, handleInputChange, handleSubmit } = useChat<{ from: string; text: string }>();
   const [vector, setVector] = useState<number[] | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [response, setResponse] = useState<string>('');
 
   // Function to get vector embedding from an API like OpenAI
   const getEmbedding = async (text: string) => {
@@ -20,7 +20,7 @@ const Home: React.FC = () => {
       });
 
       const data = await res.json();
-      setVector(data.vector);  // Set the vector returned by the backend
+      setVector(data.vector); // Set the vector returned by the backend
     } catch (error) {
       console.error("Error getting embedding:", error);
     }
@@ -29,102 +29,67 @@ const Home: React.FC = () => {
   const handleChatSubmit = async () => {
     if (!vector) {
       // If there's no vector, we need to get the embedding first
-      await getEmbedding(input);  // Get the vector for the input message
+      await getEmbedding(input); // Get the vector for the input message
       return;
     }
 
-    setLoading(true);  // Show loading spinner
+    // Send the vector and other parameters to the API
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: vector, top_k: 5, namespace: "__default__" })
+    });
 
-    try {
-      // Send the vector and other parameters to the API
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: vector, top_k: 5, namespace: "__default__" })
-      });
-
-      const data = await res.json();
-      console.log("Pinecone response:", data);
-
-      // Handle and display the assistant's response
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { role: "assistant", content: data?.response || 'No response from Pinecone' },
-      ]);
-      handleSubmit();  // Continue with your chat logic
-    } catch (error) {
-      console.error("Error during chat submission:", error);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { role: "assistant", content: "I'm sorry, I encountered an error." }
-      ]);
-    } finally {
-      setLoading(false);  // Hide loading spinner
-    }
+    const data = await res.json();
+    setResponse(data.response); // Store the assistant's response
+    handleSubmit(); // Continue with your chat logic
   };
 
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
+    <div className="font-sans min-h-screen flex flex-col bg-white relative">
+      {/* Logo */}
+      <div className="absolute top-4 left-4 z-10">
+        <img src="/deeplogo.jpg" alt="Logo" className="w-40 h-40" />
+      </div>
+
       {/* Main Content Area */}
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <h1 className="text-xl font-semibold">Welcome to Koval Deep AI Chatbot</h1>
+      <main className="flex flex-col flex-1 gap-8 items-center sm:items-start mt-16 p-4">
+        <h1 className="text-xl font-semibold text-center">Welcome to Koval Deep AI Chatbot</h1>
 
-        {/* Chat Component */}
-        <Chat
-          input={input}
-          handleInputChange={handleInputChange}
-          handleMessageSubmit={handleChatSubmit}
-          messages={messages}
-        />
+        {/* Chat Box */}
+        <div className="chat-box w-full p-4 bg-white border border-gray-300 rounded-lg max-h-[400px] overflow-y-auto mb-8">
+          {/* Chat messages will go here */}
+          {messages && messages.map((msg: { from: string; text: string }, index) => (
+            <div key={index} className={`message ${msg.from === 'user' ? 'user' : 'assistant'}`}>
+              <p>{msg.text}</p>
+            </div>
+          ))}
 
-        {/* Action Links */}
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* Display Assistant's Response */}
+          {response && (
+            <div className="message assistant mt-4">
+              <p>{response}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Chat Input and Send Button */}
+        <div className="w-full flex justify-between items-center mt-4 mb-8">
+          <input
+            type="text"
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Type your message..."
+            className="w-4/5 p-2 border border-gray-300 rounded-lg"
+          />
+          <button
+            onClick={handleChatSubmit}
+            className="w-1/5 bg-green-500 text-white py-2 rounded-lg"
           >
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            Send
+          </button>
         </div>
       </main>
-
-      {/* Footer Links */}
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 };
