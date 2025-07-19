@@ -1,9 +1,15 @@
 // pages/api/chat.ts
-import { PineconeClient } from '@pinecone-database/pinecone';
+import PineconeClient from '@pinecone-database/pinecone';
 
-const pinecone = new PineconeClient();
+const pinecone = PineconeClient();
+await pinecone.init({
+  apiKey: process.env.PINECONE_API_KEY || '',
+  environment: process.env.PINECONE_ENVIRONMENT || '',
+});
 
-export default async function handler(req, res) {
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
       const { query, top_k, namespace } = req.body;

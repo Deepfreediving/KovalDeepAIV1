@@ -8,6 +8,7 @@ const Home: React.FC = () => {
   const [context, setContext] = useState<string[] | null>(null);
   const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [vector, setVector] = useState<number[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Function to get vector embedding from an API like OpenAI
   const getEmbedding = async (text: string) => {
@@ -32,16 +33,34 @@ const Home: React.FC = () => {
       return;
     }
 
-    // Send the vector and other parameters to the API
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: vector, top_k: 5, namespace: "__default__" })
-    });
+    setLoading(true);  // Show loading spinner
 
-    const data = await res.json();
-    console.log("Pinecone response:", data);
-    handleSubmit();  // Continue with your chat logic
+    try {
+      // Send the vector and other parameters to the API
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: vector, top_k: 5, namespace: "__default__" })
+      });
+
+      const data = await res.json();
+      console.log("Pinecone response:", data);
+
+      // Handle and display the assistant's response
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { role: "assistant", content: data?.response || 'No response from Pinecone' },
+      ]);
+      handleSubmit();  // Continue with your chat logic
+    } catch (error) {
+      console.error("Error during chat submission:", error);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { role: "assistant", content: "I'm sorry, I encountered an error." }
+      ]);
+    } finally {
+      setLoading(false);  // Hide loading spinner
+    }
   };
 
   return (

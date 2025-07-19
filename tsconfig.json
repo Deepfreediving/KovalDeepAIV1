@@ -36,7 +36,7 @@
     "next-env.d.ts", // Includes the Next.js type declarations
     "src/**/*", // Includes all files in the src folder
     ".next/types/**/*.ts" // Includes Next.js types (needed by Next.js)
-, "next.config.js"  ],
+, "next.config.js", "pages/api/getEmbedding.js"  ],
   "exclude": [
     "node_modules", // Excludes the node_modules directory
     ".next" // Excludes the Next.js build output directory

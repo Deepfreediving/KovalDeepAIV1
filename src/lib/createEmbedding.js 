@@ -1,0 +1,26 @@
+import { Configuration, OpenAIApi } from "openai";
+
+// Initialize OpenAI API with your API key
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY, // Ensure this key is set in .env.local
+});
+
+const openai = new OpenAIApi(configuration);
+
+// Create embeddings for a given text
+const createEmbedding = async (text) => {
+  try {
+    const response = await openai.createEmbedding({
+      model: "text-embedding-ada-002", // OpenAI embedding model
+      input: text,
+    });
+
+    // Return the embedding vector
+    return response.data.data[0].embedding;
+  } catch (error) {
+    console.error("Error creating embedding:", error);
+    throw new Error("Failed to create embedding.");
+  }
+};
+
+export default createEmbedding;
